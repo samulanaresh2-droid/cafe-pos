@@ -161,6 +161,12 @@ button:active{opacity:.7}
 
 <section class="panel">
   <h3>Daily Sales Report</h3>
+  <label for="salesDate">Select Date</label>
+<input
+  type="date"
+  id="salesDate"
+  onchange="showSales()"
+>
 
   <p class="muted">Total Sales</p>
   <div class="total" id="sales">₹0.00</div>
@@ -554,11 +560,21 @@ renderCart();
 
 function showSales(){
 
-  let today = new Date().toDateString();
+  let selectedDate =
+    document.getElementById("salesDate").value;
 
-  let todayBills = bills.filter(b =>
-    new Date(b.date).toDateString() === today
-  );
+  let today = new Date().toISOString().split("T")[0];
+
+  let reportDate = selectedDate || today;
+
+  let todayBills = bills.filter(b => {
+    if (!b.date) return false;
+
+    let billDate = new Date(b.date)
+      .toISOString().split("T")[0];
+
+    return billDate === reportDate;
+  });
 
   let total = todayBills.reduce(
     (s,b) => s + Number(b.total || 0), 0
@@ -577,14 +593,11 @@ function showSales(){
     .reduce((s,b) => s + Number(b.total || 0), 0);
 
   document.getElementById("sales").textContent = money(total);
-
   document.getElementById("count").textContent =
-    todayBills.length + " bills today";
+    todayBills.length + " bills";
 
   document.getElementById("cashSales").textContent = money(cash);
-
   document.getElementById("upiSales").textContent = money(upi);
-
   document.getElementById("cardSales").textContent = money(card);
 }
 
