@@ -1,0 +1,254 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cafe POS Billing</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#eef3ff;font-family:Arial,sans-serif}
+header{padding:18px;background:#172640;border-bottom:1px solid #30415e}
+header h2{margin:0;color:#62d5ff}
+header p{margin:6px 0 0;color:#a9b9d2;font-size:13px}
+main{padding:14px;max-width:900px;margin:auto}
+.panel{background:#192943;padding:15px;border-radius:13px;margin-bottom:14px}
+h3{margin:0 0 12px;color:#8bdcff}
+input,select{width:100%;padding:13px;margin:5px 0 10px;border-radius:8px;border:1px solid #405574;background:#101c30;color:white;font-size:15px}
+button{border:0;border-radius:8px;padding:12px;background:#168bd0;color:white;font-weight:bold;cursor:pointer}
+button:active{opacity:.7}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.product{background:#263c5c;text-align:left;min-height:65px}
+.product small{display:block;color:#9edcff;margin-top:5px}
+.row{display:flex;gap:8px;align-items:center}
+.row input{flex:1;min-width:0}
+.row button{white-space:nowrap}
+.cartrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 0;border-bottom:1px solid #354661}
+.cartrow small{color:#aabbd2}
+.qty button{padding:6px 10px}
+.remove{background:#a33b4d}
+.total{font-size:25px;font-weight:bold;color:#66e6b2;text-align:right}
+.pay{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pay button{background:#168c70}
+.muted{color:#aabbd2;font-size:12px}
+@media(min-width:650px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media print{
+body{background:white;color:black}
+body *{visibility:hidden}
+#receipt,#receipt *{visibility:visible}
+#receipt{position:absolute;left:0;top:0;width:100%;padding:10px;color:black;background:white}
+}
+</style>
+</head>
+<body>
+<header>
+<h2>☕ CAFE POS</h2>
+<p>Smart Scanner & Manual Billing</p>
+</header>
+<main>
+
+<section class="panel">
+<h3>Barcode Scanner</h3>
+<div class="row">
+<input id="barcode" placeholder="Scan or enter barcode">
+<button onclick="scanCode()">ADD</button>
+</div>
+<p class="muted">Bluetooth scanner: Scan చేసి Enter నొక్కండి.</p>
+</section>
+
+<section class="panel">
+<h3>Food & Products</h3>
+<div id="products" class="grid"></div>
+</section>
+
+<section class="panel">
+<h3>Add Custom Item</h3>
+<input id="customName" placeholder="Item name">
+<div class="row">
+<input id="customPrice" type="number" min="0" placeholder="Price ₹">
+<button onclick="addCustom()">ADD ITEM</button>
+</div>
+</section>
+
+<section class="panel">
+<h3>Current Bill</h3>
+<div id="cart"><p class="muted">No items added</p></div>
+<hr>
+<p>Subtotal</p>
+<div class="total" id="subtotal">₹0.00</div>
+<p>Discount (₹)</p>
+<input id="discount" type="number" min="0" value="0" oninput="renderCart()">
+<p>Grand Total</p>
+<div class="total" id="grand">₹0.00</div>
+</section>
+
+<section class="panel">
+<h3>Payment</h3>
+<select id="payment">
+<option>Cash</option>
+<option>UPI</option>
+<option>Card</option>
+</select>
+<div class="pay">
+<button onclick="checkout()">COMPLETE BILL</button>
+<button onclick="clearCart()" style="background:#a33b4d">CLEAR BILL</button>
+</div>
+</section>
+
+<section class="panel">
+<h3>Daily Sales</h3>
+<div id="sales">₹0.00</div>
+<p class="muted" id="count">0 bills today</p>
+</section>
+
+<div id="receipt" hidden></div>
+</main>
+
+<script>
+const defaultProducts=[
+{name:"Tea",price:15,barcode:""},
+{name:"Coffee",price:20,barcode:""},
+{name:"Idly",price:30,barcode:""},
+{name:"Dosa",price:40,barcode:""},
+{name:"Water Bottle",price:20,barcode:"890000000001"},
+{name:"Cool Drink",price:40,barcode:"890000000002"},
+{name:"Biscuits",price:10,barcode:"890000000003"},
+{name:"Snacks",price:20,barcode:""}
+];
+
+let products=JSON.parse(localStorage.getItem("cafeProducts")||"null")||defaultProducts;
+let cart=[];
+let bills=JSON.parse(localStorage.getItem("cafeBills")||"[]");
+
+function money(n){return "₹"+Number(n).toFixed(2)}
+
+function saveProducts(){
+localStorage.setItem("cafeProducts",JSON.stringify(products));
+}
+
+function showProducts(){
+document.getElementById("products").innerHTML=products.map((p,i)=>
+`<button class="product" onclick="addItem(${i})">
+${p.name}<small>${money(p.price)}</small></button>`
+).join("");
+}
+
+function addItem(i){
+let p=products[i];
+let found=cart.find(x=>x.name===p.name);
+if(found)found.qty++;
+else cart.push({...p,qty:1});
+renderCart();
+}
+
+function scanCode(){
+let code=document.getElementById("barcode").value.trim();
+if(!code)return;
+let p=products.find(x=>x.barcode===code);
+if(p){
+let i=products.indexOf(p);
+addItem(i);
+}else{
+alert("Barcode not found. Add this product manually.");
+}
+document.getElementById("barcode").value="";
+}
+
+document.getElementById("barcode").addEventListener("keydown",e=>{
+if(e.key==="Enter")scanCode();
+});
+
+function addCustom(){
+let name=document.getElementById("customName").value.trim();
+let price=Number(document.getElementById("customPrice").value);
+if(!name||!Number.isFinite(price)||price<=0){
+alert("Enter valid item name and price");
+return;
+}
+let p={name,price,barcode:""};
+products.push(p);
+saveProducts();
+showProducts();
+addItem(products.length-1);
+document.getElementById("customName").value="";
+document.getElementById("customPrice").value="";
+}
+
+function changeQty(i,n){
+cart[i].qty+=n;
+if(cart[i].qty<=0)cart.splice(i,1);
+renderCart();
+}
+
+function renderCart(){
+let box=document.getElementById("cart");
+if(!cart.length)box.innerHTML='<p class="muted">No items added</p>';
+else box.innerHTML=cart.map((p,i)=>`
+<div class="cartrow">
+<div><b>${p.name}</b><br><small>${money(p.price)} each</small></div>
+<div class="qty row">
+<button onclick="changeQty(${i},-1)">−</button>
+<b>${p.qty}</b>
+<button onclick="changeQty(${i},1)">+</button>
+<button class="remove" onclick="cart.splice(${i},1);renderCart()">×</button>
+</div>
+<div>${money(p.price*p.qty)}</div>
+</div>`).join("");
+
+let sub=cart.reduce((s,p)=>s+p.price*p.qty,0);
+let disc=Math.max(0,Math.min(sub,Number(document.getElementById("discount").value)||0));
+document.getElementById("subtotal").textContent=money(sub);
+document.getElementById("grand").textContent=money(sub-disc);
+}
+
+function checkout(){
+if(!cart.length){alert("Please add items first");return}
+let sub=cart.reduce((s,p)=>s+p.price*p.qty,0);
+let disc=Math.max(0,Math.min(sub,Number(document.getElementById("discount").value)||0));
+let total=sub-disc;
+let payment=document.getElementById("payment").value;
+let bill={date:new Date().toLocaleString(),items:cart.map(p=>({...p})),total,payment};
+bills.push(bill);
+localStorage.setItem("cafeBills",JSON.stringify(bills));
+
+let receipt=document.getElementById("receipt");
+receipt.hidden=false;
+receipt.innerHTML=`
+<center><h2>YOUR CAFE</h2><p>Customer Bill</p></center>
+<p>${bill.date}</p><hr>
+${bill.items.map(p=>`<p>${p.name} x ${p.qty} = ${money(p.price*p.qty)}</p>`).join("")}
+<hr><p>Subtotal: ${money(sub)}</p>
+<p>Discount: ${money(disc)}</p>
+<h3>Grand Total: ${money(total)}</h3>
+<p>Payment: ${payment}</p>
+<center>Thank You! Visit Again</center>`;
+window.print();
+receipt.hidden=true;
+cart=[];
+document.getElementById("discount").value=0;
+renderCart();
+showSales();
+}
+
+function clearCart(){
+if(confirm("Clear current bill?")){
+cart=[];
+document.getElementById("discount").value=0;
+renderCart();
+}
+}
+
+function showSales(){
+let today=new Date().toDateString();
+let todayBills=bills.filter(b=>new Date(b.date).toDateString()===today);
+let sum=todayBills.reduce((s,b)=>s+b.total,0);
+document.getElementById("sales").textContent=money(sum);
+document.getElementById("count").textContent=todayBills.length+" bills today";
+}
+
+showProducts();
+renderCart();
+showSales();
+</script>
+</body>
+</html>
