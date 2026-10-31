@@ -196,6 +196,13 @@ button:active{opacity:.7}
 
   <section class="panel">
   <h3>Bill History</h3>
+    
+  <label for="historyDate">Search Bills by Date</label>
+<input
+  type="date"
+  id="historyDate"
+  onchange="showBillHistory()"
+>
 
   <input
     id="billSearch"
@@ -686,64 +693,53 @@ let billDate =
 
 function showBillHistory(){
 
-  let box = document.getElementById("billHistory");
-
   let search = document.getElementById("billSearch").value.trim();
+  let selectedDate = document.getElementById("historyDate").value;
 
-  if(!search){
-    box.innerHTML =
-      '<p class="muted">Enter Bill Number to view bill</p>';
-    return;
-  }
+  let history = bills.filter(b => {
 
-  let filtered = bills.filter(b => {
-    let billNo = String(b.billNo || "");
-    let entered = search.replace(/^0+/, "");
-    let saved = billNo.replace(/^0+/, "");
+    let billNoMatch = !search ||
+      String(b.billNo || "").replace(/^0+/, "") ===
+      search.replace(/^0+/, "");
 
-    return entered !== "" && saved === entered;
+    let billDateMatch = true;
+
+    if (selectedDate && b.date) {
+      let d = new Date(b.date);
+
+      let billDate =
+        d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
+
+      billDateMatch = billDate === selectedDate;
+    }
+
+    return billNoMatch && billDateMatch;
   });
 
-  if(!filtered.length){
-    box.innerHTML =
-      '<p class="muted">Bill not found</p>';
+  let box = document.getElementById("billHistory");
+
+  if (!search && !selectedDate) {
+    box.innerHTML = "";
     return;
   }
 
-  let b = filtered[0];
+  if (history.length === 0) {
+    box.innerHTML = "<p>No bills found.</p>";
+    return;
+  }
 
-  box.innerHTML = `
-    <div style="padding:12px 0">
-
-      <h3>Bill No: ${String(b.billNo).padStart(4,"0")}</h3>
-
-      <p>${new Date(b.date).toLocaleString("en-IN")}</p>
-
-      ${b.items.map(p => `
-        <div style="display:flex;justify-content:space-between;margin:6px 0">
-          <span>${p.name} x ${p.qty}</span>
-          <b>${money(p.price*p.qty)}</b>
-        </div>
-      `).join("")}
-
-      <hr>
-
-      <div style="display:flex;justify-content:space-between">
-        <span>Subtotal</span>
-        <b>${money(b.subtotal ?? b.items.reduce((s,p)=>s+p.price*p.qty,0))}</b>
-      </div>
-
-      <div style="display:flex;justify-content:space-between">
-        <span>Discount</span>
-        <b>${money(b.discount || 0)}</b>
-      </div>
-
-      <h3>Grand Total: ${money(b.total)}</h3>
-
-      <p>Payment: ${b.payment || "Cash"}</p>
-
+  box.innerHTML = history.map(b => `
+    <div class="panel">
+      <b>Bill No: ${b.billNo || "-"}</b>
+      <p>Date: ${b.date ? new Date(b.date).toLocaleString() : "-"}</p>
+      <p>Payment: ${b.payment || "-"}</p>
+      <p>Subtotal: ${money(b.subtotal || 0)}</p>
+      <p>Discount: ${money(b.discount || 0)}</p>
+      <h3>Grand Total: ${money(b.total || 0)}</h3>
     </div>
-  `;
+  `).join("");
 }
   
 showProducts();
