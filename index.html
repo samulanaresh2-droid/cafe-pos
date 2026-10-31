@@ -120,6 +120,12 @@ button:active{opacity:.7}
 </div>
 </section>
 
+  <section class="panel">
+  <h3>Manage Products</h3>
+
+  <div id="manageProducts"></div>
+  </section>
+
 <section class="panel">
 <h3>Current Bill</h3>
 <div id="cart"><p class="muted">No items added</p></div>
@@ -184,6 +190,34 @@ document.getElementById("products").innerHTML=products.map((p,i)=>
 ${p.name}<small>${money(p.price)}</small></button>`
 ).join("");
 }
+
+  function showManageProducts(){
+
+  let box=document.getElementById("manageProducts");
+
+  box.innerHTML=products.map((p,i)=>`
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+      padding:10px 0;
+      border-bottom:1px solid #354661;
+    ">
+
+      <div style="flex:1;min-width:0">
+        <b>${p.name}</b>
+        <div class="muted">${money(p.price)}</div>
+        <div class="muted">Barcode: ${p.barcode||"Not assigned"}</div>
+      </div>
+
+      <button onclick="editProduct(${i})">EDIT</button>
+
+      <button class="remove" onclick="deleteProduct(${i})">DELETE</button>
+
+    </div>
+  `).join("");
+  }
 
 function addItem(i){
 let p=products[i];
