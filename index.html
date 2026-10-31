@@ -219,6 +219,70 @@ ${p.name}<small>${money(p.price)}</small></button>`
   `).join("");
   }
 
+  function editProduct(i){
+
+  let p=products[i];
+
+  let name=prompt("Enter Product Name:",p.name);
+  if(name===null)return;
+
+  name=name.trim();
+  if(!name){
+    alert("Product name cannot be empty");
+    return;
+  }
+
+  let priceInput=prompt("Enter Product Price:",p.price);
+  if(priceInput===null)return;
+
+  let price=Number(priceInput);
+  if(!Number.isFinite(price)||price<=0){
+    alert("Enter valid price");
+    return;
+  }
+
+  let barcode=prompt("Enter Barcode:",p.barcode||"");
+  if(barcode===null)return;
+
+  barcode=barcode.trim();
+
+  if(barcode && products.some((x,index)=>
+    index!==i && x.barcode===barcode
+  )){
+    alert("This barcode already exists");
+    return;
+  }
+
+  products[i]={
+    name,
+    price,
+    barcode
+  };
+
+  saveProducts();
+  showProducts();
+  showManageProducts();
+
+  alert("Product updated successfully");
+  }
+
+  function deleteProduct(i){
+
+  let p=products[i];
+
+  if(!confirm("Delete "+p.name+"?")){
+    return;
+  }
+
+  products.splice(i,1);
+
+  saveProducts();
+  showProducts();
+  showManageProducts();
+
+  alert("Product deleted successfully");
+  }
+
 function addItem(i){
 let p=products[i];
 let found=cart.find(x=>x.name===p.name);
@@ -434,6 +498,7 @@ document.getElementById("count").textContent=todayBills.length+" bills today";
 }
 
 showProducts();
+showManageProducts();
 renderCart();
 showSales();
 </script>
