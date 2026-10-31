@@ -397,40 +397,49 @@ if(e.key==="Enter")scanCode();
 });
 
 function addCustom(){
+function addCustom(){
 
-let name=document.getElementById("customName").value.trim();
+  let name = document.getElementById("customName").value.trim();
 
-let price=Number(document.getElementById("customPrice").value);
+  let price = Number(document.getElementById("customPrice").value);
 
-let barcode=document.getElementById("customBarcode").value.trim();
+  let barcode = document.getElementById("customBarcode").value.trim();
 
-if(!name||!Number.isFinite(price)||price<=0){
-alert("Enter valid item name and price");
-return;
+  let stock = Number(document.getElementById("customStock").value);
+
+  if(!name || !Number.isFinite(price) || price <= 0){
+    alert("Enter valid item name and price");
+    return;
+  }
+
+  if(!Number.isFinite(stock) || stock < 0){
+    alert("Enter valid opening stock");
+    return;
+  }
+
+  if(barcode && products.some(p => p.barcode === barcode)){
+    alert("This barcode already exists");
+    return;
+  }
+
+  let p = {
+    name,
+    price,
+    barcode,
+    stock
+  };
+
+  products.push(p);
+
+  saveProducts();
+  showProducts();
+  addItem(products.length - 1);
+
+  document.getElementById("customName").value = "";
+  document.getElementById("customPrice").value = "";
+  document.getElementById("customBarcode").value = "";
+  document.getElementById("customStock").value = "0";
 }
-
-if(barcode && products.some(p=>p.barcode===barcode)){
-alert("This barcode already exists");
-return;
-}
-
-let p={
-name,
-price,
-barcode
-};
-
-products.push(p);
-
-saveProducts();
-showProducts();
-addItem(products.length-1);
-
-document.getElementById("customName").value="";
-document.getElementById("customPrice").value="";
-document.getElementById("customBarcode").value="";
-}
-
 function changeQty(i,n){
 cart[i].qty+=n;
 if(cart[i].qty<=0)cart.splice(i,1);
