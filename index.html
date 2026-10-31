@@ -160,9 +160,29 @@ button:active{opacity:.7}
 </section>
 
 <section class="panel">
-<h3>Daily Sales</h3>
-<div id="sales">₹0.00</div>
-<p class="muted" id="count">0 bills today</p>
+  <h3>Daily Sales Report</h3>
+
+  <p class="muted">Total Sales</p>
+  <div class="total" id="sales">₹0.00</div>
+
+  <p class="muted" id="count">0 bills today</p>
+
+  <hr>
+
+  <div class="cartrow">
+    <b>Cash Collection</b>
+    <b id="cashSales">₹0.00</b>
+  </div>
+
+  <div class="cartrow">
+    <b>UPI Collection</b>
+    <b id="upiSales">₹0.00</b>
+  </div>
+
+  <div class="cartrow">
+    <b>Card Collection</b>
+    <b id="cardSales">₹0.00</b>
+  </div>
 </section>
 
   <section class="panel">
@@ -533,11 +553,39 @@ renderCart();
 }
 
 function showSales(){
-let today=new Date().toDateString();
-let todayBills=bills.filter(b=>new Date(b.date).toDateString()===today);
-let sum=todayBills.reduce((s,b)=>s+b.total,0);
-document.getElementById("sales").textContent=money(sum);
-document.getElementById("count").textContent=todayBills.length+" bills today";
+
+  let today = new Date().toDateString();
+
+  let todayBills = bills.filter(b =>
+    new Date(b.date).toDateString() === today
+  );
+
+  let total = todayBills.reduce(
+    (s,b) => s + Number(b.total || 0), 0
+  );
+
+  let cash = todayBills
+    .filter(b => b.payment === "Cash")
+    .reduce((s,b) => s + Number(b.total || 0), 0);
+
+  let upi = todayBills
+    .filter(b => b.payment === "UPI")
+    .reduce((s,b) => s + Number(b.total || 0), 0);
+
+  let card = todayBills
+    .filter(b => b.payment === "Card")
+    .reduce((s,b) => s + Number(b.total || 0), 0);
+
+  document.getElementById("sales").textContent = money(total);
+
+  document.getElementById("count").textContent =
+    todayBills.length + " bills today";
+
+  document.getElementById("cashSales").textContent = money(cash);
+
+  document.getElementById("upiSales").textContent = money(upi);
+
+  document.getElementById("cardSales").textContent = money(card);
 }
 
 function showBillHistory(){
