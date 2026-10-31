@@ -123,8 +123,16 @@ button:active{opacity:.7}
   <section class="panel">
   <h3>Manage Products</h3>
 
-  <div id="manageProducts"></div>
-  </section>
+  <input
+    id="manageProductSearch"
+    placeholder="Search Product Name or Barcode..."
+    oninput="showManageProducts()"
+  >
+
+  <div id="manageProducts">
+    <p class="muted">Search a product to manage</p>
+  </div>
+</section>
 
 <section class="panel">
 <h3>Current Bill</h3>
@@ -205,9 +213,31 @@ ${p.name}<small>${money(p.price)}</small></button>`
 
   function showManageProducts(){
 
-  let box=document.getElementById("manageProducts");
+  let box = document.getElementById("manageProducts");
 
-  box.innerHTML=products.map((p,i)=>`
+  let search = document.getElementById("manageProductSearch").value.trim().toLowerCase();
+
+  if(!search){
+    box.innerHTML =
+      '<p class="muted">Search a product to manage</p>';
+    return;
+  }
+
+  let filtered = products
+    .map((p,i)=>({...p,index:i}))
+    .filter(p =>
+      p.name.toLowerCase().includes(search) ||
+      String(p.barcode || "").toLowerCase().includes(search)
+    );
+
+  if(!filtered.length){
+    box.innerHTML =
+      '<p class="muted">Product not found</p>';
+    return;
+  }
+
+  box.innerHTML = filtered.map(p=>`
+
     <div style="
       display:flex;
       justify-content:space-between;
@@ -220,16 +250,17 @@ ${p.name}<small>${money(p.price)}</small></button>`
       <div style="flex:1;min-width:0">
         <b>${p.name}</b>
         <div class="muted">${money(p.price)}</div>
-        <div class="muted">Barcode: ${p.barcode||"Not assigned"}</div>
+        <div class="muted">Barcode: ${p.barcode || "Not assigned"}</div>
       </div>
 
-      <button onclick="editProduct(${i})">EDIT</button>
+      <button onclick="editProduct(${p.index})">EDIT</button>
 
-      <button class="remove" onclick="deleteProduct(${i})">DELETE</button>
+      <button class="remove" onclick="deleteProduct(${p.index})">DELETE</button>
 
     </div>
+
   `).join("");
-  }
+}
 
   function editProduct(i){
 
@@ -515,38 +546,62 @@ function showBillHistory(){
 
   let search = document.getElementById("billSearch").value.trim();
 
-  let filtered = bills.filter(b =>
-    String(b.billNo || "").includes(search)
-  );
-
-  if(!filtered.length){
-    box.innerHTML = '<p class="muted">No bills found</p>';
+  if(!search){
+    box.innerHTML =
+      '<p class="muted">Enter Bill Number to view bill</p>';
     return;
   }
 
-  box.innerHTML = filtered.slice().reverse().map(b => `
+  let filtered = bills.filter(b => {
+    let billNo = String(b.billNo || "");
+    let entered = search.replace(/^0+/, "");
+    let saved = billNo.replace(/^0+/, "");
 
-    <div style="
-      padding:12px 0;
-      border-bottom:1px solid #354661;
-    ">
+    return entered !== "" && saved === entered;
+  });
 
-      <b>Bill No: ${String(b.billNo || "-").padStart(4,"0")}</b>
+  if(!filtered.length){
+    box.innerHTML =
+      '<p class="muted">Bill not found</p>';
+    return;
+  }
 
-      <p class="muted">
-        ${new Date(b.date).toLocaleString("en-IN")}
-      </p>
+  let b = filtered[0];
 
-      <div class="row" style="justify-content:space-between">
-        <b>${money(b.total)}</b>
-        <span>${b.payment || "Cash"}</span>
+  box.innerHTML = `
+    <div style="padding:12px 0">
+
+      <h3>Bill No: ${String(b.billNo).padStart(4,"0")}</h3>
+
+      <p>${new Date(b.date).toLocaleString("en-IN")}</p>
+
+      ${b.items.map(p => `
+        <div style="display:flex;justify-content:space-between;margin:6px 0">
+          <span>${p.name} x ${p.qty}</span>
+          <b>${money(p.price*p.qty)}</b>
+        </div>
+      `).join("")}
+
+      <hr>
+
+      <div style="display:flex;justify-content:space-between">
+        <span>Subtotal</span>
+        <b>${money(b.subtotal ?? b.items.reduce((s,p)=>s+p.price*p.qty,0))}</b>
       </div>
 
+      <div style="display:flex;justify-content:space-between">
+        <span>Discount</span>
+        <b>${money(b.discount || 0)}</b>
+      </div>
+
+      <h3>Grand Total: ${money(b.total)}</h3>
+
+      <p>Payment: ${b.payment || "Cash"}</p>
+
     </div>
-
-  `).join("");
+  `;
 }
-
+  
 showProducts();
 showManageProducts();
 renderCart();
