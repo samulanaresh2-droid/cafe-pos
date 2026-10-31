@@ -304,10 +304,20 @@ function checkout(){
   <hr>
 
   ${bill.items.map(p=>`
-    <p>
-      ${p.name} x ${p.qty} = ${money(p.price*p.qty)}
-    </p>
-  `).join("")}
+  <div style="
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap:8px;
+    margin:5px 0;
+    font-family:monospace;
+    font-size:12px;
+  ">
+    <span>${p.name} x ${p.qty}</span>
+    <span style="text-align:right;white-space:nowrap">
+      = ${money(p.price*p.qty)}
+    </span>
+  </div>
+`).join("")}
 
   <hr>
 
