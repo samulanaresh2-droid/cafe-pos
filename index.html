@@ -170,6 +170,9 @@ button:active{opacity:.7}
 
   <p class="muted">Total Sales</p>
   <div class="total" id="sales">₹0.00</div>
+  <button onclick="downloadSalesReport()">
+  DOWNLOAD SALES REPORT
+  </button>
 
   <p class="muted" id="count">0 bills today</p>
 
@@ -606,6 +609,80 @@ let billDate =
   document.getElementById("upiSales").textContent = money(upi);
   document.getElementById("cardSales").textContent = money(card);
 }
+
+  function downloadSalesReport() {
+
+  let date = document.getElementById("salesDate").value;
+
+  if (!date) {
+    let d = new Date();
+    date =
+      d.getFullYear() + "-" +
+      String(d.getMonth() + 1).padStart(2, "0") + "-" +
+      String(d.getDate()).padStart(2, "0");
+  }
+
+  let total = document.getElementById("sales").textContent;
+  let count = document.getElementById("count").textContent;
+  let cash = document.getElementById("cashSales").textContent;
+  let upi = document.getElementById("upiSales").textContent;
+  let card = document.getElementById("cardSales").textContent;
+
+  let reportWindow = window.open("", "_blank");
+
+  if (!reportWindow) {
+    alert("Please allow pop-ups to download the report.");
+    return;
+  }
+
+  reportWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Quality Snacks & Tea - Sales Report</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          padding: 25px;
+          color: #222;
+        }
+        h2, p { text-align: center; }
+        .row {
+          display: flex;
+          justify-content: space-between;
+          padding: 12px 0;
+          border-bottom: 1px solid #ccc;
+          font-size: 17px;
+        }
+        .total {
+          font-size: 24px;
+          font-weight: bold;
+        }
+        @media print {
+          button { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <h2>QUALITY SNACKS & TEA</h2>
+      <h3 style="text-align:center">DAILY SALES REPORT</h3>
+      <p>Date: ${date}</p>
+
+      <div class="row"><b>Total Sales</b><b class="total">${total}</b></div>
+      <div class="row"><b>Total Bills</b><b>${count}</b></div>
+      <div class="row"><b>Cash Collection</b><b>${cash}</b></div>
+      <div class="row"><b>UPI Collection</b><b>${upi}</b></div>
+      <div class="row"><b>Card Collection</b><b>${card}</b></div>
+
+      <br>
+      <p>Thank You!</p>
+      <button onclick="window.print()">PRINT / SAVE PDF</button>
+    </body>
+    </html>
+  `);
+
+  reportWindow.document.close();
+  }
 
 function showBillHistory(){
 
