@@ -321,10 +321,24 @@ function checkout(){
 
   <hr>
 
-  <p>Subtotal: ${money(sub)}</p>
-  <p>Discount: ${money(disc)}</p>
+  <hr>
 
-  <h3>Grand Total: ${money(total)}</h3>
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin:6px 0;font-family:monospace;font-size:12px;">
+  <span>Subtotal</span>
+  <span style="text-align:right">${money(sub)}</span>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin:6px 0;font-family:monospace;font-size:12px;">
+  <span>Discount</span>
+  <span style="text-align:right">${money(disc)}</span>
+</div>
+
+<hr>
+
+<div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin:8px 0;font-family:monospace;font-size:14px;font-weight:bold;">
+  <span>Grand Total</span>
+  <span style="text-align:right">${money(total)}</span>
+</div>
 
   <p>Payment: ${payment}</p>
 
