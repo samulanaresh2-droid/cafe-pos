@@ -237,7 +237,14 @@ const defaultProducts=[
 {name:"Snacks",price:20,barcode:""}
 ];
 
-let products=JSON.parse(localStorage.getItem("cafeProducts")||"null")||defaultProducts;
+let savedProducts = JSON.parse(
+  localStorage.getItem("cafeProducts") || "null"
+);
+
+let products =
+  Array.isArray(savedProducts) && savedProducts.length > 0
+    ? savedProducts
+    : defaultProducts;;
 let cart=[];
 let bills=JSON.parse(localStorage.getItem("cafeBills")||"[]");
 let nextBillNo = Number(localStorage.getItem("cafeNextBillNo") || (bills.length + 1)
