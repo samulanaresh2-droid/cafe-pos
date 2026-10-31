@@ -33,11 +33,17 @@ button:active{opacity:.7}
 .muted{color:#aabbd2;font-size:12px}
 @media(min-width:650px){.grid{grid-template-columns:repeat(3,1fr)}}
 
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
+
 @media print {
   html, body {
     width: 80mm !important;
     margin: 0 !important;
     padding: 0 !important;
+    background: white !important;
   }
 
   body * {
@@ -50,16 +56,18 @@ button:active{opacity:.7}
 
   #receipt {
     display: block !important;
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 76mm;
-    margin: 0;
-    padding: 2mm;
-    box-sizing: border-box;
-    font-size: 12px;
-    color: black;
-    background: white;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 3mm !important;
+    box-sizing: border-box !important;
+    background: white !important;
+    color: black !important;
+    font-family: Arial, sans-serif !important;
+    font-size: 12px !important;
+    overflow-wrap: break-word;
   }
 
   #receipt h2 {
@@ -68,7 +76,12 @@ button:active{opacity:.7}
   }
 
   #receipt p {
-    margin: 4px 0;
+    margin: 5px 0;
+  }
+
+  #receipt hr {
+    border: 0;
+    border-top: 1px dashed black;
   }
 }
 </style>
@@ -152,6 +165,8 @@ const defaultProducts=[
 let products=JSON.parse(localStorage.getItem("cafeProducts")||"null")||defaultProducts;
 let cart=[];
 let bills=JSON.parse(localStorage.getItem("cafeBills")||"[]");
+let nextBillNo = Number(localStorage.getItem("cafeNextBillNo") || (bills.length + 1)
+);
 
 function money(n){return "₹"+Number(n).toFixed(2)}
 
@@ -235,33 +250,90 @@ document.getElementById("grand").textContent=money(sub-disc);
 }
 
 function checkout(){
-if(!cart.length){alert("Please add items first");return}
-let sub=cart.reduce((s,p)=>s+p.price*p.qty,0);
-let disc=Math.max(0,Math.min(sub,Number(document.getElementById("discount").value)||0));
-let total=sub-disc;
-let payment=document.getElementById("payment").value;
-let bill={date:new Date().toLocaleString(),items:cart.map(p=>({...p})),total,payment};
-bills.push(bill);
-localStorage.setItem("cafeBills",JSON.stringify(bills));
 
-let receipt=document.getElementById("receipt");
-receipt.hidden=false;
-receipt.innerHTML=`
+  if(!cart.length){
+    alert("Please add items first");
+    return;
+  }
 
-<center><h2>QUALITY SNACKS & TEA</h2><p>Customer Bill</p></center>
-<p>${bill.date}</p><hr>
-${bill.items.map(p=>`<p>${p.name} x ${p.qty} = ${money(p.price*p.qty)}</p>`).join("")}
-<hr><p>Subtotal: ${money(sub)}</p>
-<p>Discount: ${money(disc)}</p>
-<h3>Grand Total: ${money(total)}</h3>
-<p>Payment: ${payment}</p>
-<center>Thank You! Visit Again</center>`;
-window.print();
-receipt.hidden=true;
-cart=[];
-document.getElementById("discount").value=0;
-renderCart();
-showSales();
+  let sub=cart.reduce((s,p)=>s+p.price*p.qty,0);
+
+  let disc=Math.max(
+    0,
+    Math.min(sub,Number(document.getElementById("discount").value)||0)
+  );
+
+  let total=sub-disc;
+  let payment=document.getElementById("payment").value;
+
+  let now=new Date();
+  let billNo=nextBillNo;
+
+  let bill={
+    billNo,
+    date:now.toISOString(),
+    items:cart.map(p=>({...p})),
+    subtotal:sub,
+    discount:disc,
+    total,
+    payment
+  };
+
+  bills.push(bill);
+
+  localStorage.setItem("cafeBills",JSON.stringify(bills));
+
+  nextBillNo++;
+  localStorage.setItem("cafeNextBillNo",nextBillNo);
+
+  let receipt=document.getElementById("receipt");
+
+  receipt.hidden=false;
+
+  receipt.innerHTML=`
+
+  <center>
+    <h2>QUALITY SNACKS & TEA</h2>
+    <p>Customer Bill</p>
+  </center>
+
+  <p><b>Bill No:</b> ${String(billNo).padStart(4,"0")}</p>
+  <p><b>Date:</b> ${now.toLocaleDateString("en-IN")}</p>
+  <p><b>Time:</b> ${now.toLocaleTimeString("en-IN")}</p>
+
+  <hr>
+
+  ${bill.items.map(p=>`
+    <p>
+      ${p.name} x ${p.qty} = ${money(p.price*p.qty)}
+    </p>
+  `).join("")}
+
+  <hr>
+
+  <p>Subtotal: ${money(sub)}</p>
+  <p>Discount: ${money(disc)}</p>
+
+  <h3>Grand Total: ${money(total)}</h3>
+
+  <p>Payment: ${payment}</p>
+
+  <hr>
+
+  <center>
+    <p>Thank You! Visit Again</p>
+  </center>
+  `;
+
+  window.print();
+
+  receipt.hidden=true;
+  cart=[];
+
+  document.getElementById("discount").value=0;
+
+  renderCart();
+  showSales();
 }
 
 function clearCart(){
