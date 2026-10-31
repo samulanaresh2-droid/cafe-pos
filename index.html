@@ -32,11 +32,48 @@ button:active{opacity:.7}
 .pay button{background:#168c70}
 .muted{color:#aabbd2;font-size:12px}
 @media(min-width:650px){.grid{grid-template-columns:repeat(3,1fr)}}
-@media print{
-body{background:white;color:black}
-body *{visibility:hidden}
-#receipt,#receipt *{visibility:visible}
-#receipt{position:absolute;left:0;top:0;width:100%;padding:10px;color:black;background:white}
+@page {
+  size: 80mm auto;
+  margin: 2mm;
+}
+
+@media print {
+  html, body {
+    width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #receipt, #receipt * {
+    visibility: visible !important;
+  }
+
+  #receipt {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 76mm;
+    margin: 0;
+    padding: 2mm;
+    box-sizing: border-box;
+    font-size: 12px;
+    color: black;
+    background: white;
+  }
+
+  #receipt h2 {
+    font-size: 16px;
+    margin: 4px 0;
+  }
+
+  #receipt p {
+    margin: 4px 0;
+  }
 }
 </style>
 </head>
