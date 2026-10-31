@@ -562,11 +562,13 @@ function showSales(){
 
   let selectedDate =
     document.getElementById("salesDate").value;
+let now = new Date();
+let today =
+  now.getFullYear() + "-" +
+  String(now.getMonth() + 1).padStart(2, "0") + "-" +
+  String(now.getDate()).padStart(2, "0");
 
-  let today = new Date().toISOString().split("T")[0];
-
-  let reportDate = selectedDate || today;
-
+let reportDate = selectedDate || today;
   let todayBills = bills.filter(b => {
     if (!b.date) return false;
 
