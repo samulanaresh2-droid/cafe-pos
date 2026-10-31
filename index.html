@@ -572,8 +572,12 @@ let reportDate = selectedDate || today;
   let todayBills = bills.filter(b => {
     if (!b.date) return false;
 
-    let billDate = new Date(b.date)
-      .toISOString().split("T")[0];
+    let d = new Date(b.date);
+
+let billDate =
+  d.getFullYear() + "-" +
+  String(d.getMonth() + 1).padStart(2, "0") + "-" +
+  String(d.getDate()).padStart(2, "0");
 
     return billDate === reportDate;
   });
