@@ -157,6 +157,18 @@ button:active{opacity:.7}
 <p class="muted" id="count">0 bills today</p>
 </section>
 
+  <section class="panel">
+  <h3>Bill History</h3>
+
+  <input
+    id="billSearch"
+    placeholder="Search Bill Number..."
+    oninput="showBillHistory()"
+  >
+
+  <div id="billHistory"></div>
+  </section>
+
 <div id="receipt" hidden></div>
 </main>
 
@@ -497,10 +509,49 @@ document.getElementById("sales").textContent=money(sum);
 document.getElementById("count").textContent=todayBills.length+" bills today";
 }
 
+function showBillHistory(){
+
+  let box = document.getElementById("billHistory");
+
+  let search = document.getElementById("billSearch").value.trim();
+
+  let filtered = bills.filter(b =>
+    String(b.billNo || "").includes(search)
+  );
+
+  if(!filtered.length){
+    box.innerHTML = '<p class="muted">No bills found</p>';
+    return;
+  }
+
+  box.innerHTML = filtered.slice().reverse().map(b => `
+
+    <div style="
+      padding:12px 0;
+      border-bottom:1px solid #354661;
+    ">
+
+      <b>Bill No: ${String(b.billNo || "-").padStart(4,"0")}</b>
+
+      <p class="muted">
+        ${new Date(b.date).toLocaleString("en-IN")}
+      </p>
+
+      <div class="row" style="justify-content:space-between">
+        <b>${money(b.total)}</b>
+        <span>${b.payment || "Cash"}</span>
+      </div>
+
+    </div>
+
+  `).join("");
+}
+
 showProducts();
 showManageProducts();
 renderCart();
 showSales();
+showBillHistory();
 </script>
 </body>
 </html>
